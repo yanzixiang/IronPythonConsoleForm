@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2048
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronPythonConsoleForm", "IronPythonConsoleForm\IronPythonConsoleForm.csproj", "{5B4DE2A6-8357-4F45-BF54-7C3CDFFB7E22}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronPythonConsoleWPF", "IronPythonConsoleWPF\IronPythonConsoleWPF.csproj", "{FB6E4876-D78C-472E-B1EE-1E0F83ACF220}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronPythonConsoleWinForm", "IronPythonConsoleWinForm\IronPythonConsoleWinForm.csproj", "{23C336FA-9616-4237-84BA-1D73BBB9A243}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5B4DE2A6-8357-4F45-BF54-7C3CDFFB7E22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B4DE2A6-8357-4F45-BF54-7C3CDFFB7E22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B4DE2A6-8357-4F45-BF54-7C3CDFFB7E22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B4DE2A6-8357-4F45-BF54-7C3CDFFB7E22}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB6E4876-D78C-472E-B1EE-1E0F83ACF220}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB6E4876-D78C-472E-B1EE-1E0F83ACF220}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB6E4876-D78C-472E-B1EE-1E0F83ACF220}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB6E4876-D78C-472E-B1EE-1E0F83ACF220}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23C336FA-9616-4237-84BA-1D73BBB9A243}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23C336FA-9616-4237-84BA-1D73BBB9A243}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23C336FA-9616-4237-84BA-1D73BBB9A243}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23C336FA-9616-4237-84BA-1D73BBB9A243}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {87D683D1-5D14-44C9-9B4C-4DA369FE64EE}
+	EndGlobalSection
+EndGlobal
