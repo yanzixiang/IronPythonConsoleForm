@@ -1,7 +1,3 @@
-Open Graph Editor
-
-打开顺序流程图编辑器
-
 ![](http://yanzixiang.github.io/2015/11/13/IronPythonConsole/IronPythonConsoleWPF.png)
 
 ```
