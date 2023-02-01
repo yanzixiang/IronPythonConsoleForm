@@ -3,14 +3,18 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using ICSharpCode.AvalonEdit;
-using ICSharpCode.AvalonEdit.Editing;
-using ICSharpCode.AvalonEdit.Document;
-using ICSharpCode.AvalonEdit.CodeCompletion;
+using System.Windows;
 using System.Windows.Threading;
 using System.Windows.Input;
 using System.Threading;
 using System.Diagnostics;
+
+using ICSharpCode.AvalonEdit;
+using ICSharpCode.AvalonEdit.Editing;
+using ICSharpCode.AvalonEdit.Document;
+using ICSharpCode.AvalonEdit.CodeCompletion;
+
+using Microsoft.Scripting;
 
 namespace PythonConsoleControl
 {
@@ -23,25 +27,54 @@ namespace PythonConsoleControl
     internal TextArea textArea;
     StringBuilder writeBuffer = new StringBuilder();
     volatile bool writeInProgress = false;
-    PythonConsoleCompletionWindow completionWindow = null;
     int completionEventIndex = 0;
     int descriptionEventIndex = 1;
     WaitHandle[] completionWaitHandles;
     AutoResetEvent completionRequestedEvent = new AutoResetEvent(false);
     AutoResetEvent descriptionRequestedEvent = new AutoResetEvent(false);
-    Thread completionThread;
-    PythonConsoleCompletionDataProvider completionProvider = null;
 
     public PythonTextEditor(TextEditor textEditor)
     {
       this.textEditor = textEditor;
       this.textArea = textEditor.TextArea;
       completionWaitHandles = new WaitHandle[] { completionRequestedEvent, descriptionRequestedEvent };
-      completionThread = new Thread(new ThreadStart(Completion));
-      completionThread.Priority = ThreadPriority.Lowest;
-      completionThread.SetApartmentState(ApartmentState.STA);
-      completionThread.IsBackground = true;
-      completionThread.Start();
+      textEditor.IsVisibleChanged += TextEditor_IsVisibleChanged;
+    }
+
+    private void StartCompletionThread()
+    {
+      CompletionThread = new Thread(new ThreadStart(Completion));
+      CompletionThread.Priority = ThreadPriority.Lowest;
+      CompletionThread.SetApartmentState(ApartmentState.STA);
+      CompletionThread.IsBackground = true;
+      CompletionThread.Start();
+    }
+
+    private void StopCompletionThread()
+    {
+      if (CompletionThread != null)
+      {
+        try
+        {
+          CompletionThread.Abort();
+          CompletionThread = null;
+        }catch(Exception ex)
+        {
+
+        }
+      }
+    }
+
+    private void TextEditor_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+      if ((bool)e.NewValue)
+      {
+        StartCompletionThread();
+      }
+      else
+      {
+        StopCompletionThread();
+      }
     }
 
     public bool WriteInProgress
@@ -66,6 +99,10 @@ namespace PythonConsoleControl
       //text = text.Replace("\r\r\n", "\r\n");
       text = text.Replace("\r\r\n", "\r");
       text = text.Replace("\r\n", "\r");
+      if (text == ">>>")
+      {
+        text = "";
+      }
       if (allowSynchronous)
       {
         MoveToEnd();
@@ -125,7 +162,7 @@ namespace PythonConsoleControl
       if (textArea.Caret.Column != column) textArea.Caret.Column = column;
     }
 
-    private void PerformTextInput(string text)
+    public void PerformTextInput(string text)
     {
       if (text == "\n" || text == "\r\n")
       {
@@ -250,32 +287,22 @@ namespace PythonConsoleControl
       }
     }
 
-    public PythonConsoleCompletionDataProvider CompletionProvider
-    {
-      get { return completionProvider; }
-      set { completionProvider = value; }
-    }
+    public PythonConsoleCompletionDataProvider CompletionProvider { get; set; } = null;
 
-    public Thread CompletionThread
-    {
-      get { return completionThread; }
-    }
+    public Thread CompletionThread { get; private set; }
 
     public bool StopCompletion()
     {
-      if (completionProvider.AutocompletionInProgress)
+      if (CompletionProvider.AutocompletionInProgress)
       {
         // send Ctrl-C abort
-        completionThread.Abort(new Microsoft.Scripting.KeyboardInterruptException(""));
+        CompletionThread.Abort(new KeyboardInterruptException(""));
         return true;
       }
       return false;
     }
 
-    public PythonConsoleCompletionWindow CompletionWindow
-    {
-      get { return completionWindow; }
-    }
+    public PythonConsoleCompletionWindow CompletionWindow { get; private set; } = null;
 
     public void ShowCompletionWindow()
     {
@@ -290,13 +317,20 @@ namespace PythonConsoleControl
     /// <summary>
     /// Perform completion actions on the background completion thread.
     /// </summary>
+    [DebuggerStepThrough]
     void Completion()
     {
       while (true)
       {
-        int action = WaitHandle.WaitAny(completionWaitHandles);
-        if (action == completionEventIndex && completionProvider != null) BackgroundShowCompletionWindow();
-        if (action == descriptionEventIndex && completionProvider != null && completionWindow != null) BackgroundUpdateCompletionDescription();
+        try
+        {
+          int action = WaitHandle.WaitAny(completionWaitHandles);
+          if (action == completionEventIndex && CompletionProvider != null) BackgroundShowCompletionWindow();
+          if (action == descriptionEventIndex && CompletionProvider != null && CompletionWindow != null) BackgroundUpdateCompletionDescription();
+        }catch(Exception ex)
+        {
+
+        }
       }
     }
 
@@ -313,20 +347,20 @@ namespace PythonConsoleControl
         itemForCompletion = textArea.Document.GetText(line);
       }));
 
-      ICompletionData[] completions = completionProvider.GenerateCompletionData(itemForCompletion);
+      ICompletionData[] completions = CompletionProvider.GenerateCompletionData(itemForCompletion);
 
       if (completions != null && completions.Length > 0) textArea.Dispatcher.BeginInvoke(new Action(delegate()
       {
-        completionWindow = new PythonConsoleCompletionWindow(textArea, this);
-        IList<ICompletionData> data = completionWindow.CompletionList.CompletionData;
+        CompletionWindow = new PythonConsoleCompletionWindow(textArea, this);
+        IList<ICompletionData> data = CompletionWindow.CompletionList.CompletionData;
         foreach (ICompletionData completion in completions)
         {
           data.Add(completion);
         }
-        completionWindow.Show();
-        completionWindow.Closed += delegate
+        CompletionWindow.Show();
+        CompletionWindow.Closed += delegate
         {
-          completionWindow = null;
+          CompletionWindow = null;
         };
       }));
 
@@ -334,12 +368,12 @@ namespace PythonConsoleControl
 
     internal void BackgroundUpdateCompletionDescription()
     {
-      completionWindow.UpdateCurrentItemDescription();
+      CompletionWindow.UpdateCurrentItemDescription();
     }
 
     public void RequestCompletioninsertion(TextCompositionEventArgs e)
     {
-      if (completionWindow != null) completionWindow.CompletionList.RequestInsertion(e);
+      if (CompletionWindow != null) CompletionWindow.CompletionList.RequestInsertion(e);
       // if autocompletion still in progress, terminate
       StopCompletion();
     }

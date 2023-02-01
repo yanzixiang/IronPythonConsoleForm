@@ -12,14 +12,24 @@ namespace PythonConsoleControl
 {
   public partial class IronPythonConsoleControl : UserControl,IDisposable
   {
-    PythonConsolePad pad;
-
     public IronPythonConsoleControl()
     {
       InitializeComponent();
-      pad = new PythonConsolePad();
-      grid.Children.Add(pad.Control);
-      IHighlightingDefinition pythonHighlighting;
+      InitHighLight();
+      IsVisibleChanged += IronPythonConsoleControl_IsVisibleChanged;
+    }
+
+    private void IronPythonConsoleControl_IsVisibleChanged(object sender, 
+      DependencyPropertyChangedEventArgs e)
+    {
+      if (!PadInited)
+      {
+        InitPad();
+      }
+    }
+
+    public static void InitHighLight()
+    {
       using (Stream s = typeof(IronPythonConsoleControl).Assembly.GetManifestResourceStream("IronPythonConsoleForm.Resources.Python.xshd"))
       {
         if (s == null)
@@ -32,15 +42,38 @@ namespace PythonConsoleControl
       }
       // and register it in the HighlightingManager
       HighlightingManager.Instance.RegisterHighlighting("Python Highlighting", new string[] { ".cool" }, pythonHighlighting);
-      pad.Control.SyntaxHighlighting = pythonHighlighting;
-      IList<IVisualLineTransformer> transformers = pad.Control.TextArea.TextView.LineTransformers;
-      for (int i = 0; i < transformers.Count; ++i)
+    }
+
+    public void InitPad(Action<PythonConsoleHost> hostAction = null)
+    {
+      Pad = new PythonConsolePad();
+      Pad.StartHost();
+
+      if (hostAction != null)
       {
-        if (transformers[i] is HighlightingColorizer)
+        WithHost(hostAction);
+      }
+
+      grid.Children.Add(Pad.Control);
+      
+
+      try
+      {
+        Pad.Control.SyntaxHighlighting = pythonHighlighting;
+        IList<IVisualLineTransformer> transformers = Pad.Control.TextArea.TextView.LineTransformers;
+        for (int i = 0; i < transformers.Count; ++i)
         {
-          transformers[i] = new PythonConsoleHighlightingColorizer(pythonHighlighting, pad.Control.Document);
+          if (transformers[i] is HighlightingColorizer)
+          {
+            transformers[i] = new PythonConsoleHighlightingColorizer(pythonHighlighting, Pad.Control.Document);
+          }
         }
       }
+      catch (Exception ex)
+      {
+
+      }
+      PadInited = true;
     }
 
     private void IronPythonConsoleControl_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -57,36 +90,60 @@ namespace PythonConsoleControl
     /// </summary>
     public void WithHost(Action<PythonConsoleHost> hostAction)
     {
-      this.hostAction = hostAction;
-      Host.ConsoleCreated += new ConsoleCreatedEventHandler(Host_ConsoleCreated);
+      this.ConsoleInitializedAction = hostAction;
+      if (Host != null)
+      {
+        Host.ConsoleCreated += new ConsoleCreatedEventHandler(Host_ConsoleCreated);
+      }
     }
 
-    Action<PythonConsoleHost> hostAction;
+    Action<PythonConsoleHost> ConsoleInitializedAction;
 
     void Host_ConsoleCreated(object sender, EventArgs e)
     {
-      Console.ConsoleInitialized += new ConsoleInitializedEventHandler(Console_ConsoleInitialized);
+      if (Console != null)
+      {
+        Console.ConsoleInitialized += new ConsoleInitializedEventHandler(Console_ConsoleInitialized);
+      }
     }
 
     void Console_ConsoleInitialized(object sender, EventArgs e)
     {
-      hostAction.Invoke(Host);
+      ConsoleInitializedAction.Invoke(Host);
     }
 
     public PythonConsole Console
     {
-      get { return pad.Console; }
+      get
+      {
+        if (Pad != null)
+        {
+          return Pad.Console;
+        }
+        else
+        {
+          return null;
+        }
+      }
     }
 
     public PythonConsoleHost Host
     {
-      get { return pad.Host; }
+      get {
+        if (Pad != null)
+        {
+          return Pad.Host;
+        }
+        else
+        {
+          return null;
+        }
+      }
     }
 
-    public PythonConsolePad Pad
-    {
-      get { return pad; }
-    }
+    private bool PadInited;
+    public PythonConsolePad Pad { get; private set; }
+    public static IHighlightingDefinition pythonHighlighting;
     #region IPY变量
     public Dictionary<string, object> Variables = new Dictionary<string, object>();
     public void UpdateVariables()
@@ -95,7 +152,16 @@ namespace PythonConsoleControl
       {
         string tag = v.Key;
         object value = v.Value;
-        Host.Console.ScriptScope.SetVariable(tag, value);
+        if(Host != null)
+        {
+          if(Host.Console != null)
+          {
+            if (Host.Console.ScriptScope != null)
+            {
+              Host.Console.ScriptScope.SetVariable(tag, value);
+            }
+          }
+        }
       }
     }
     public void SetVariable(string tag, object value)
@@ -112,7 +178,16 @@ namespace PythonConsoleControl
 
     public void Dispose()
     {
-      pad.Dispose();
+      try
+      {
+        if (Pad != null)
+        {
+          Pad.Dispose();
+        }
+      }catch(Exception ex)
+      {
+
+      }
     }
   }
 }

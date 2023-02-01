@@ -39,7 +39,7 @@
   <ItemGroup>
     <Reference Include="ICSharpCode.AvalonEdit, Version=5.0.3.0, Culture=neutral, PublicKeyToken=9cc39be672370310, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\KUKA\SmartHMI\packages\ICSharpCode.AvalonEdit.dll</HintPath>
+      <HintPath>..\..\..\..\gitt\KUKA\SmartHMI\packages\ICSharpCode.AvalonEdit.dll</HintPath>
     </Reference>
     <Reference Include="IronPython, Version=2.7.6.3, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -89,6 +89,7 @@
     <Compile Include="IronPythonConsoleForm.Designer.cs">
       <DependentUpon>IronPythonConsoleForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="IronPythonManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PythonCompletionData.cs" />
     <Compile Include="PythonConsole.cs" />

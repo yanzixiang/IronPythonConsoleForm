@@ -1,48 +1,79 @@
 ﻿// Copyright (c) 2010 Joe Moorhouse
 
-using ICSharpCode.AvalonEdit;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Controls;
+
+using ICSharpCode.AvalonEdit;
 
 namespace PythonConsoleControl
 {
   public class PythonConsolePad
   {
     PythonTextEditor pythonTextEditor;
-    TextEditor textEditor;
-    PythonConsoleHost host;
 
     public PythonConsolePad()
     {
-      textEditor = new TextEditor();
-      pythonTextEditor = new PythonTextEditor(textEditor);
-      host = new PythonConsoleHost(pythonTextEditor);
-      host.Run();
-      textEditor.FontFamily = new FontFamily("Consolas");
-      textEditor.FontSize = 14;
-      textEditor.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
-      textEditor.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
-      textEditor.WordWrap = true;
+      Control = new TextEditor();
+      pythonTextEditor = new PythonTextEditor(Control);
+      
+      Control.FontFamily = new FontFamily("Consolas");
+      Control.FontSize = 14;
+      Control.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
+      Control.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
+      Control.WordWrap = true;
+
+      Control.IsVisibleChanged += Control_IsVisibleChanged;
     }
 
-    public TextEditor Control
+    private void Control_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
-      get { return textEditor; }
+      if (Control.IsVisible)
+      {
+        StartHost();
+      }
+      else
+      {
+        StopHost();
+      }
     }
 
-    public PythonConsoleHost Host
+    public bool HostStarted = false;
+    public void StartHost()
     {
-      get { return host; }
+      if (!HostStarted)
+      {
+        Host = new PythonConsoleHost(pythonTextEditor);
+        Host.Run();
+        HostStarted = true;
+      }
     }
+
+    public void StopHost()
+    {
+      if (HostStarted)
+      {
+        Host.Stop();
+        Host = null;
+        HostStarted = false;
+      }
+    }
+
+    public TextEditor Control { get; }
+
+    public PythonConsoleHost Host { get; private set; }
 
     public PythonConsole Console
     {
-      get { return host.Console; }
+      get { return Host.Console; }
     }
 
     public void Dispose()
     {
-      host.Dispose();
+      if (Host != null)
+      {
+        Host.Dispose();
+      }
     }
   }
 }

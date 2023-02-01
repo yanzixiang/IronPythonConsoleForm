@@ -29,12 +29,7 @@ namespace PythonConsoleControl
   /// </summary>
   public class PythonConsole : IConsole, IDisposable
   {
-    bool allowFullAutocompletion = true;
-    public bool AllowFullAutocompletion
-    {
-      get { return allowFullAutocompletion; }
-      set { allowFullAutocompletion = value; }
-    }
+    public bool AllowFullAutocompletion { get; set; } = true;
 
     bool disableAutocompletionForCallables = true;
     public bool DisableAutocompletionForCallables
@@ -47,14 +42,9 @@ namespace PythonConsoleControl
       }
     }
 
-    bool allowCtrlSpaceAutocompletion = false;
-    public bool AllowCtrlSpaceAutocompletion
-    {
-      get { return allowCtrlSpaceAutocompletion; }
-      set { allowCtrlSpaceAutocompletion = value; }
-    }
+    public bool AllowCtrlSpaceAutocompletion { get; set; } = false;
 
-    PythonTextEditor textEditor;
+    public PythonTextEditor textEditor;
     int lineReceivedEventIndex = 0; // The index into the waitHandles array where the lineReceivedEvent is stored.
     ManualResetEvent lineReceivedEvent = new ManualResetEvent(false);
     ManualResetEvent disposedEvent = new ManualResetEvent(false);
@@ -575,7 +565,7 @@ namespace PythonConsoleControl
           OnEnterKeyPressed();
         }
 
-        if (e.Text[0] == '.' && allowFullAutocompletion)
+        if (e.Text[0] == '.' && AllowFullAutocompletion)
         {
           textEditor.ShowCompletionWindow();
         }
@@ -583,7 +573,7 @@ namespace PythonConsoleControl
         if ((e.Text[0] == ' ') && (Keyboard.Modifiers == ModifierKeys.Control))
         {
           e.Handled = true;
-          if (allowCtrlSpaceAutocompletion) textEditor.ShowCompletionWindow();
+          if (AllowCtrlSpaceAutocompletion) textEditor.ShowCompletionWindow();
         }
       }
     }
@@ -675,7 +665,7 @@ namespace PythonConsoleControl
     /// <summary>
     /// The home position is at the start of the line after the prompt.
     /// </summary>
-    void MoveToHomePosition()
+    public void MoveToHomePosition()
     {
       textEditor.Line = textEditor.TotalLines;
       textEditor.Column = promptLength + 1;

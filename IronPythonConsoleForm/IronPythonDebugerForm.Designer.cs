@@ -1,11 +1,11 @@
 ﻿namespace PythonConsoleControl
 {
-  partial class IronPythonConsoleForm
+  partial class IronPythonDebugerForm
   {
     private void InitializeComponent()
     {
       this.PCVHost = new System.Windows.Forms.Integration.ElementHost();
-      this.PCV = new PythonConsoleControl.IronPythonConsoleControl();
+      this.PCV = new PythonConsoleControl.IronPythonDebuger();
       this.SuspendLayout();
       // 
       // PCVHost
@@ -28,6 +28,6 @@
     }
 
     public System.Windows.Forms.Integration.ElementHost PCVHost;
-    public PythonConsoleControl.IronPythonConsoleControl PCV;
+    public PythonConsoleControl.IronPythonDebuger PCV;
   }
 }

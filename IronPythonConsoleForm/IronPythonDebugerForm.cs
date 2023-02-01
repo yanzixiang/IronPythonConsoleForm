@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Windows.Forms;
-using System.Windows.Threading;
 
 namespace PythonConsoleControl
 {
-  public partial class IronPythonConsoleForm : Form
+  public partial class IronPythonDebugerForm : Form,IronPythonMonitor
   {
     public static void OpenInThread()
     {
@@ -20,7 +18,7 @@ namespace PythonConsoleControl
       IronPythonConsoleForm c = new IronPythonConsoleForm();
       c.Show();
     }
-    public IronPythonConsoleForm()
+    public IronPythonDebugerForm()
     {
       InitializeComponent();
       Load += IronPythonConsoleForm_Load;
@@ -54,5 +52,36 @@ namespace PythonConsoleControl
         PCV.Height = ClientSize.Height;
       }
     }
+
+    #region IronPythonMonitor
+    public void ShowIronPythonFile(string FileName)
+    {
+      PCV.ShowIronPythonFile(FileName);
+    }
+
+    public void TracebackEvent(object sender,IPYTracebackEventArgs e)
+    {
+      PCV.TracebackEvent(this,e);
+    }
+
+    public void StartWatching()
+    {
+      PCV.StartWatching();
+    }
+
+    public void StopWatching()
+    {
+      PCV.StopWatching();
+    }
+
+    public void SetMonitorDelay(int delay=20)
+    {
+      PCV.SetMonitorDelay(delay);
+    }
+    public void CatchException(Exception ex)
+    {
+
+    }
+    #endregion
   }
 }

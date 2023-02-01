@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-using YZXLogicEngine;
+using PythonConsoleControl;
 
 namespace IronPythonConsoleWinForm
 {

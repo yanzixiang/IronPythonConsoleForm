@@ -3,6 +3,7 @@
 using System;
 using System.Text;
 using System.Threading;
+using System.Diagnostics;
 using System.Reflection;
 
 using Microsoft.Scripting.Hosting;
@@ -24,7 +25,6 @@ namespace PythonConsoleControl
   {
     Thread thread;
     PythonTextEditor textEditor;
-    PythonConsole pythonConsole;
 
     public event ConsoleCreatedEventHandler ConsoleCreated;
 
@@ -45,15 +45,8 @@ namespace PythonConsoleControl
     {
       System.Console.WriteLine(frame.f_lineno);
       return OnTracebackReceived;
-
     }
-
-    public PythonConsole Console
-    {
-      get {
-        return pythonConsole;
-      }
-    }
+    public PythonConsole Console { get; private set; }
 
     protected override Type Provider
     {
@@ -70,11 +63,27 @@ namespace PythonConsoleControl
       thread.Start();
     }
 
-    public void Dispose()
+    public void Stop()
     {
-      if (pythonConsole != null)
+      try
       {
-        pythonConsole.Dispose();
+        thread.Abort();
+        thread = null;
+      }catch(Exception ex)
+      {
+
+      }
+    }
+
+    protected virtual void Dispose(bool gc)
+    {
+      if (Console != null)
+      {
+        Console.Dispose();
+        if (gc)
+        {
+          GC.SuppressFinalize(this);
+        }
       }
 
       if (thread != null)
@@ -99,13 +108,16 @@ namespace PythonConsoleControl
     /// This can be done in this method since the Runtime object will have been created before this method
     /// is called.
     /// </remarks>
-    protected override IConsole CreateConsole(ScriptEngine engine, CommandLine commandLine, ConsoleOptions options)
+    protected override IConsole CreateConsole(
+      ScriptEngine engine, 
+      CommandLine commandLine,
+      ConsoleOptions options)
     {
       SetOutput(new PythonOutputStream(textEditor));
-      pythonConsole = new PythonConsole(textEditor, commandLine);
+      Console = new PythonConsole(textEditor, commandLine);
       ConsoleCreated?.Invoke(this, EventArgs.Empty);
-      //Runtime.SetTrace(OnTracebackReceived);//yzx
-      return pythonConsole;
+      Runtime.SetTrace(OnTracebackReceived);//yzx
+      return Console;
     }
 
     protected virtual void SetOutput(PythonOutputStream stream)
@@ -116,9 +128,16 @@ namespace PythonConsoleControl
     /// <summary>
     /// Runs the console.
     /// </summary>
+    [DebuggerStepThrough]
     public void RunConsole()
     {
-      this.Run(new string[] { "-X:FullFrames" });
+      try
+      {
+        this.Run(new string[] { "-X:FullFrames" });
+      }catch(Exception ex)
+      {
+
+      }
     }
 
     protected override ScriptRuntimeSetup CreateRuntimeSetup()
@@ -143,6 +162,7 @@ namespace PythonConsoleControl
       }
     }
 
+    [DebuggerStepThrough]
     protected override void ExecuteInternal()
     {
       var pc = HostingHelpers.GetLanguageContext(Engine) as PythonContext;
@@ -156,6 +176,11 @@ namespace PythonConsoleControl
       {
         Console.WriteLine(iex.ToString(), Style.Warning);
       }
+    }
+
+    public void Dispose()
+    {
+      Dispose(true);
     }
   }
 }
